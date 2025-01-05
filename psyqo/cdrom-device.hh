@@ -413,6 +413,15 @@ class CDRomDevice final : public CDRom {
     void setVolume(uint8_t leftToLeft, uint8_t rightToLeft, uint8_t leftToRight, uint8_t rightToRight);
 
     /**
+     * @brief Sends a test command to the CDRom mech
+     *
+     * @param callback The callback to call when the command operation is complete.
+     */
+    void test(eastl::function<void(bool)> &&callback);
+    TaskQueue::Task scheduleTest();
+    void testBlocking(GPU &);
+
+    /**
      * @brief The action base class for the internal state machine.
      *
      * @details This class is meant to be extended by the various actions
