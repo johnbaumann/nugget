@@ -36,6 +36,7 @@ SOFTWARE.
 #include <type_traits>
 
 #include "psyqo/cdrom.hh"
+#include "psyqo/cdrom-commandbuffer.hh"
 #include "psyqo/msf.hh"
 #include "psyqo/task.hh"
 
@@ -417,9 +418,9 @@ class CDRomDevice final : public CDRom {
      *
      * @param callback The callback to call when the command operation is complete.
      */
-    void test(eastl::function<void(bool)> &&callback);
-    TaskQueue::Task scheduleTest();
-    void testBlocking(GPU &);
+    void test(CDRomCommandBuffer commandBuffer, eastl::function<void(bool)> &&callback);
+    TaskQueue::Task scheduleTest(CDRomCommandBuffer commandBuffer);
+    void testBlocking(GPU &, CDRomCommandBuffer commandBuffer);
 
     /**
      * @brief The action base class for the internal state machine.
