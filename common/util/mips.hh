@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2021 PCSX-Redux authors
+Copyright (c) 2025 PCSX-Redux authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,37 +28,29 @@ SOFTWARE.
 
 #include <stdint.h>
 
-#ifdef __cplusplus
+namespace Mips {
 
-#include <concepts>
+// clang-format off
+enum class Reg {
+    R0, AT, V0, V1, A0, A1, A2, A3,  // 00 to 07
+    T0, T1, T2, T3, T4, T5, T6, T7,  // 08 to 0f
+    S0, S1, S2, S3, S4, S5, S6, S7,  // 10 to 17
+    T8, T9, K0, K1, GP, SP, S8, RA,  // 18 to 1f
+};
+// clang-format on
 
-namespace Utilities {
+typedef union {
+    struct {
+        uint32_t r0, at, v0, v1, a0, a1, a2, a3;
+        uint32_t t0, t1, t2, t3, t4, t5, t6, t7;
+        uint32_t s0, s1, s2, s3, s4, s5, s6, s7;
+        uint32_t t8, t9, k0, k1, gp, sp, s8, ra;
+        uint32_t lo, hi;
+    } n;
+    uint32_t r[34]; /* Lo, Hi in r[32] and r[33] */
+} GPRRegs;
 
-template <std::integral T, unsigned size = (sizeof(T) + 7) / 8>
-T loadUnaligned(const uint8_t *ptr) {
-    T ret = 0;
-    for (unsigned i = 0; i < size; i++) {
-        ret |= (ptr[i] << (i * 8));
-    }
-    return ret;
-}
+}  // namespace Mips
 
-template <std::integral T, unsigned size = (sizeof(T) + 7) / 8>
-void storeUnaligned(uint8_t *ptr, T value) {
-    for (unsigned i = 0; i < size; i++) {
-        ptr[i] = value >> (i * 8);
-    }
-}
-
-}  // namespace Utilities
-
-#endif
-
-#ifdef __mips__
-static __inline__ uint32_t load32Unaligned(const void *in, int pos) {
-    const uint8_t *buffer = (const uint8_t *)in;
-    uint32_t r;
-    __builtin_memcpy(&r, buffer + pos, sizeof(uint32_t));
-    return r;
-}
-#endif
+// Make sure no packing is inserted anywhere
+static_assert(sizeof(Mips::GPRRegs) == 34 * sizeof(uint32_t), "GPRRegs size mismatch");

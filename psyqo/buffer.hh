@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2021 PCSX-Redux authors
+Copyright (c) 2025 PCSX-Redux authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,39 +26,28 @@ SOFTWARE.
 
 #pragma once
 
-#include <stdint.h>
+#include "common/util/buffer.hh"
+#include "psyqo/alloc.h"
 
-#ifdef __cplusplus
+namespace psyqo {
 
-#include <concepts>
-
-namespace Utilities {
-
-template <std::integral T, unsigned size = (sizeof(T) + 7) / 8>
-T loadUnaligned(const uint8_t *ptr) {
-    T ret = 0;
-    for (unsigned i = 0; i < size; i++) {
-        ret |= (ptr[i] << (i * 8));
+struct PsyqoAllocator {
+    template <typename T>
+    static inline T* allocate(size_t size) {
+        return reinterpret_cast<T*>(psyqo_malloc(size * sizeof(T)));
     }
-    return ret;
-}
-
-template <std::integral T, unsigned size = (sizeof(T) + 7) / 8>
-void storeUnaligned(uint8_t *ptr, T value) {
-    for (unsigned i = 0; i < size; i++) {
-        ptr[i] = value >> (i * 8);
+    static inline void deallocate(void* ptr) { psyqo_free(ptr); }
+    template <typename T>
+    static inline T* reallocate(void* ptr, size_t size) {
+        return reinterpret_cast<T*>(psyqo_realloc(ptr, size * sizeof(T)));
     }
-}
+    template <typename T>
+    static inline void copy(T* dst, const T* src, size_t size) {
+        __builtin_memcpy(dst, src, size * sizeof(T));
+    }
+};
 
-}  // namespace Utilities
+template <typename T>
+using Buffer = Utilities::Buffer<T, PsyqoAllocator>;
 
-#endif
-
-#ifdef __mips__
-static __inline__ uint32_t load32Unaligned(const void *in, int pos) {
-    const uint8_t *buffer = (const uint8_t *)in;
-    uint32_t r;
-    __builtin_memcpy(&r, buffer + pos, sizeof(uint32_t));
-    return r;
-}
-#endif
+}  // namespace psyqo
